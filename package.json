@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/reqter/oauth.git"
+    "url": "git+https://github.com/reqter/auth.git"
   },
   "keywords": [
     "oauth",
@@ -22,9 +22,9 @@
   "author": "Fakhreddin Rezaei",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/reqter/oauth/issues"
+    "url": "https://github.com/reqter/auth/issues"
   },
-  "homepage": "https://github.com/reqter/oauth#readme",
+  "homepage": "https://github.com/reqter/auth#readme",
   "dependencies": {
     "amqplib": "0.5.3",
     "async": "2.6.2",
