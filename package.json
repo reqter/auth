@@ -1,0 +1,38 @@
+{
+  "name": "@app-sdk/oauth",
+  "version": "1.0.5",
+  "description": "authentication service",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./src/bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reqter/oauth.git"
+  },
+  "keywords": [
+    "oauth",
+    "authentiaction",
+    "oauth2"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Fakhreddin Rezaei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/reqter/oauth/issues"
+  },
+  "homepage": "https://github.com/reqter/oauth#readme",
+  "dependencies": {
+    "amqplib": "0.5.3",
+    "async": "2.6.2",
+    "auth-core": "1.0.1",
+    "bcrypt-nodejs": "0.0.3",
+    "jsonwebtoken": "8.4.0",
+    "mongoose": "5.4.10",
+    "uuid": "3.3.2",
+    "var": "0.3.2"
+  }
+}
