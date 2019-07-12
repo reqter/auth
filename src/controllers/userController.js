@@ -1,5 +1,4 @@
 var User = require('../models/user'); 
-var auth = require('../models/authmodel'); 
 var jwt = require('jsonwebtoken');
 var async = require('async');
 const config = require('../config/config');

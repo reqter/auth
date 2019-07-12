@@ -1,12 +1,9 @@
-const Clients = require('../models/client');
+const Companies = require('../models/company');
 var uuid = require('uuid/v4')
-const bcrypt = require('bcrypt-nodejs');
-const SALT_WORK_FACTOR = 10;
-
 var findByUSpaceId = function(req, cb)
 {
     console.log(req);
-    Clients.find({"spaceId" : req.spaceId}).exec(function(err, clients){
+    Companies.find({"spaceId" : req.spaceId}).exec(function(err, Companies){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -16,11 +13,11 @@ var findByUSpaceId = function(req, cb)
             cb(result);       
             return; 
         }
-        if (clients)
+        if (Companies)
         {
             result.success = true;
             result.error = undefined;
-            result.data =  clients;
+            result.data =  Companies;
             cb(result); 
         }
         else
@@ -34,7 +31,7 @@ var findByUSpaceId = function(req, cb)
 };
 var findById = function(req, cb)
 {
-    Clients.find({"id" : req.body.id}).exec(function(err, client){
+    Companies.find({"id" : req.body.id}).exec(function(err, company){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -44,9 +41,9 @@ var findById = function(req, cb)
             cb(result);       
             return; 
         }
-        if (client)
+        if (company)
         {
-            if (client.owner !== req.userId)
+            if (company.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -56,7 +53,7 @@ var findById = function(req, cb)
             }
             result.success = true;
             result.error = undefined;
-            result.data =  client;
+            result.data =  company;
             cb(result); 
         }
         else
@@ -68,56 +65,67 @@ var findById = function(req, cb)
         }
     });
 };
-var addClient = function(req, cb)
+//#region  deleted
+// {
+//     sys : {},
+//     first_name : req.body.first_name,
+//     last_name : req.body.last_name,
+//     phoneNumber : req.body.phoneNumber,
+//     email : req.body.email,
+//     phoneNumberVerified : req.body.phoneNumberVerified,
+//     emailVerified : req.body.emailVerified,
+//     address : req.body.address,
+//     notification : req.body.notification,
+//     location : req.body.location,
+//     avatar : req.body.avatar,
+//     homepage : req.body.homepage,
+//     orgNumber : req.body.orgNumber,
+//     country : req.body.country,
+//     city : req.body.city,
+//     reqistrationNo : req.body.reqistrationNo,
+//     numberOfEmployees : req.body.numberOfEmployees,
+//     fax : req.body.fax,
+//     industryName : req.body.industryName,
+//     industryCode : req.body.industryCode,
+//     postalCode : req.body.postalCode,
+//     address : req.body.address,
+//     logo : req.body.logo,
+//     relationType : req.body.relationType,
+//     owner : req.body.owner,
+//     companyStatus : req.body.companyStatus,
+//     blacklisted : req.body.blacklisted,
+//     companyType : req.body.companyType,
+//     companyTypeName : req.body.companyTypeName,
+//     creationDocument : req.body.creationDocument,
+//     latestBalanceSheet : req.body.latestBalanceSheet,
+//     latestBankAccountReport : req.body.latestBankAccountReport,
+//     latestChanges : req.body.latestChanges,
+//     totalAssets : req.body.totalAssets,
+//     total_Equity : req.body.total_Equity,
+//     annual_revenue : req.body.annual_revenue,
+//     net_margin : req.body.net_margin,
+//     turnover : req.body.turnover,
+//     signatory_rights : req.body.signatory_rights,
+//     boardMembers : req.body.boardMembers,
+//     ceo : req.body.ceo,
+//     description : req.body.description,
+//     cash_liquidity : req.body.cash_liquidity,
+//     favorites : [],
+//     company : {},
+//     rate : 1,
+//     rules : []
+// }
+//
+var addcompany = function(req, cb)
 {
-    var client = new Clients({
-        spaceId : req.spaceId,
-        redirectUris: req.body.redirectUris,
-        name : req.body.name,
-        description : req.body.description,
-        longDesc : req.body.longDesc,
-        icon : req.body.icon,
-        homepage : req.body.homepage,
-        category : req.body.category,
-        type : req.body.type,
-        owner : req.userId,
-        grants : req.body.grants
-    });
-
-    client.clientId = uuid();
-    // only hash the password if it has been modified (or is new)
-    // generate a salt
-    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
-        if (err) return;
-
-        // hash the password using our new salt
-        bcrypt.hash(client.clientId, salt, function(){}, function(err, hash) {
-            if (err) return ;
-            client.clientSecret = hash;
-            client.save(function(err){
-                var result = {success : false, data : null, error : null };
-                if (err)
-                {
-                    result.success = false;
-                    result.data =  undefined;
-                    result.error = err;
-                    cb(result);       
-                    return; 
-                }
-                //Successfull. 
-                //Publish user registered event
-                result.success = true;
-                result.error = undefined;
-                result.data =  client;
-                cb(result); 
-            });
-        });
-    });
-};
-
-var deleteClient = function(req, cb)
-{
-     Clients.findById(req.body.id).exec(function(err, client){
+    var company = new Companies();
+    company = Object.assign(company, req.body);
+    company.sys.type = "company";
+    company.sys.link = uniqid();
+    company.sys.issuer = req.userId;
+    company.sys.issueDate = new Date();
+    company.sys.spaceId = req.spaceId;
+    company.save(function(err){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -127,9 +135,30 @@ var deleteClient = function(req, cb)
             cb(result);       
             return; 
         }
-        if (client)
+        //Successfull. 
+        //Publish user registered event
+        result.success = true;
+        result.error = undefined;
+        result.data =  company;
+        cb(result); 
+    });
+};
+
+var deletecompany = function(req, cb)
+{
+     Companies.findById(req.body.id).exec(function(err, company){
+        var result = {success : false, data : null, error : null };
+        if (err)
         {
-            if (client.owner !== req.userId)
+            result.success = false;
+            result.data =  undefined;
+            result.error = err;
+            cb(result);       
+            return; 
+        }
+        if (company)
+        {
+            if (company.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -137,7 +166,7 @@ var deleteClient = function(req, cb)
                 cb(result);       
                 return; 
             }
-            Clients.remove({_id : client._id}, function(err){
+            Companies.remove({_id : company._id}, function(err){
                 if(err)
                 {
                     result.success = false;
@@ -167,9 +196,9 @@ var deleteClient = function(req, cb)
     });
 };
 
-var updateClient = function(req, cb)
+var updatecompany = function(req, cb)
 {
-     Clients.findById(req.body.id).exec(function(err, client){
+     Companies.findById(req.body.id).exec(function(err, company){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -179,9 +208,9 @@ var updateClient = function(req, cb)
             cb(result);       
             return; 
         }
-        if (client)
+        if (company)
         {
-            if (client.owner !== req.userId)
+            if (company.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -189,16 +218,8 @@ var updateClient = function(req, cb)
                 cb(result);       
                 return; 
             }
-            client.redirectUris = req.body.redirectUris,
-            client.name = req.body.name,
-            client.description = req.body.description,
-            client.longDesc = req.body.longDesc,
-            client.icon = req.body.icon,
-            client.homepage = req.body.homepage,
-            client.category = req.body.category,
-            client.type = req.body.type,
-            client.grants = req.body.grants;
-            client.save(function(err){
+            company = Object.assign(company, req.body);
+            company.save(function(err){
                 if(err)
                 {
                     result.success = false;
@@ -209,7 +230,7 @@ var updateClient = function(req, cb)
                 }
                 //Successfull. 
                 //Publish user profile updated event
-                Clients.findById(req.body.id).exec(function(err, client){
+                Companies.findById(req.body.id).exec(function(err, company){
                     if(err)
                     {
                         result.success = false;
@@ -220,7 +241,7 @@ var updateClient = function(req, cb)
                     }
                     result.success = true;
                     result.error = undefined;
-                    result.data =  client;
+                    result.data =  company;
                     cb(result); 
                 });
             });
@@ -237,8 +258,8 @@ var updateClient = function(req, cb)
     });
 };
 
-exports.findBySpaceId = findByUSpaceId;
-exports.addClient = addClient;
-exports.deleteClient = deleteClient;
-exports.updateClient = updateClient;
+exports.getall = findByUSpaceId;
+exports.add = addcompany;
+exports.delete = deletecompany;
+exports.update = updatecompany;
 exports.findbyid = findById;

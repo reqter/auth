@@ -2,10 +2,10 @@ var amqp = require('amqplib/callback_api');
 var db = require('./config/init-db');
 var cityController = require('./controllers/cityController');
 var userController = require('./controllers/userController');
-var cltController = require('./controllers/clientController');
 var adminController = require('./controllers/adminController');
-var oauth = require('./config/init-auth');
 var spaceController = require('./controllers/spaceController');
+var companyController = require('./controllers/companyController');
+var contactController = require('./controllers/contactController');
 
 var rabbitHost = process.env.RABBITMQ_HOST || "amqp://gvgeetrh:6SyWQAxDCpcdg1S0Dc-Up0sUxfmBUVZU@chimpanzee.rmq.cloudamqp.com/gvgeetrh";
 //var rabbitHost = process.env.RABBITMQ_HOST || "amqp://localhost:5672";
@@ -57,58 +57,199 @@ function whenConnected() {
         ch.prefetch(1);
         channel = ch;
         console.log('Authentication service broker started!');
-      //Token API
-    ch.assertQueue("token", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            console.log('Token request recieved')
-            var req = JSON.parse(msg.content.toString('utf8'));
-            try{
-                if (!req.body.grant_type)
-                    req.body.grant_type = "password";
-                if (grant_type == "password")
-                {
-                if (!req.body.password)
-                req.body.password = req.body.username;
+  
+        ///Company management api
+        //AddCompany API
+        ch.assertQueue("addcompany", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    companyController.add(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
                 }
-                oauth.token(req,  {}, {}, (result)=>{
-                    ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                    ch.ack(msg);
-                });
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+        //Remove Company API
+        ch.assertQueue("removecompany", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    companyController.delete(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+        //Update Company API
+        ch.assertQueue("updatecompany", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    companyController.update(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+            });
+        });
+        //Get Company By Id API
+        ch.assertQueue("getcompanybyid", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    companyController.findbyid(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
                 }
                 catch(ex)
                 {
-                console.log(ex);
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
-                    ch.ack(msg);
-                }
-            
-        });
-    });
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
   
-       //Token API
-    ch.assertQueue("authenticate", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            console.log('Authenticate request recieved')
-            var req = JSON.parse(msg.content.toString('utf8'));
-            console.log(req);
-            oauth.authenticate(req,  {}, {}, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
             });
         });
-    });
-     //Token API
-     ch.assertQueue("authorize", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            console.log('Authorize request recieved')
-            var req = JSON.parse(msg.content.toString('utf8'));
-            console.log(req);
-            oauth.authorize(req,  {}, {}, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
+        //Get Company By User Id API
+        ch.assertQueue("getallcompanies", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    companyController.getall(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+                catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
             });
         });
-    });
+
+        ///Contact management api
+        //AddContact API
+        ch.assertQueue("addcontact", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    contactController.add(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+        //Remove Contact API
+        ch.assertQueue("removecontact", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    contactController.delete(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+        //Update Contact API
+        ch.assertQueue("updatecontact", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    contactController.update(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+              catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+            });
+        });
+        //Get Contact By Id API
+        ch.assertQueue("getcontactbyid", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    contactController.findbyid(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+                catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+        //Get Contact By User Id API
+        ch.assertQueue("getallcompanies", {durable: false}, (err, q)=>{
+            ch.consume(q.queue, function reply(msg) {
+                var req = JSON.parse(msg.content.toString('utf8'));
+                try{
+                    contactController.getall(req, (result)=>{
+                        ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
+                        ch.ack(msg);
+                    });
+                }
+                catch(ex)
+                {
+                  console.log(ex);
+                  ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(ex)), { correlationId: msg.properties.correlationId } );
+                      ch.ack(msg);
+                } 
+  
+            });
+        });
+
     ///AddUser Api
     ch.assertQueue("register", {durable: false}, (err, q)=>{
         ch.consume(q.queue, function reply(msg) {
@@ -244,61 +385,6 @@ function whenConnected() {
                   ch.ack(msg);
               });
           });
-      });
-
-      ///Clients management apis
-      //RegisterClient API
-      ch.assertQueue("registerapp", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            var req = JSON.parse(msg.content.toString('utf8'));
-            console.log(req);
-            cltController.addClient(req, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
-            });
-        });
-      });
-      //RemoveClient API
-      ch.assertQueue("removeapp", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            var req = JSON.parse(msg.content.toString('utf8'));
-            cltController.deleteClient(req, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
-            });
-        });
-      });
-      //UpdateClient API
-      ch.assertQueue("updateapp", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            var req = JSON.parse(msg.content.toString('utf8'));
-            cltController.updateClient(req, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
-            });
-        });
-      });
-
-     //GetAllClients API
-      ch.assertQueue("getapps", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            var req = JSON.parse(msg.content.toString('utf8'));
-            console.log(req);
-            cltController.findBySpaceId(req, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
-            });
-        });
-      });
-      //GetAllClients API
-      ch.assertQueue("getappbyid", {durable: false}, (err, q)=>{
-        ch.consume(q.queue, function reply(msg) {
-            var req = JSON.parse(msg.content.toString('utf8'));
-            cltController.findbyid(req, (result)=>{
-                ch.sendToQueue(msg.properties.replyTo, new Buffer.from(JSON.stringify(result)), { correlationId: msg.properties.correlationId } );
-                ch.ack(msg);
-            });
-        });
       });
 
       ///GetCities Api

@@ -9,14 +9,14 @@ var user = new Schema({
     activation_code : {type:Number},
     approved : {type : Boolean},
     active : {type : Boolean, default : true},
-    roles : {type:Array},
+    role : {type:String, default : "customer"},
     language : {type : String},
     notification : {type:Boolean},
     access_token : {type:String},
     device : {type:String},
     lastlogin : {type : Date},
     spaceId : {type: Schema.Types.ObjectId, ref: 'Space'},
-    profile : {type :Object}
+    contact : {type: Schema.Types.ObjectId, ref: 'Contact'}
 }, { toJSON: { virtuals: true } });
 
 user.pre('save', function(next) {

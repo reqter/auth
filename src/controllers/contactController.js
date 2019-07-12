@@ -1,9 +1,8 @@
-const Customers = require('../models/customer');
-var uuid = require('uuid/v4')
+const Contacts = require('../models/contact');
 var findByUSpaceId = function(req, cb)
 {
     console.log(req);
-    Customers.find({"spaceId" : req.spaceId}).exec(function(err, customers){
+    Contacts.find({"spaceId" : req.spaceId}).exec(function(err, contacts){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -13,11 +12,11 @@ var findByUSpaceId = function(req, cb)
             cb(result);       
             return; 
         }
-        if (customers)
+        if (contacts)
         {
             result.success = true;
             result.error = undefined;
-            result.data =  customers;
+            result.data =  contacts;
             cb(result); 
         }
         else
@@ -31,7 +30,7 @@ var findByUSpaceId = function(req, cb)
 };
 var findById = function(req, cb)
 {
-    Customers.find({"id" : req.body.id}).exec(function(err, customer){
+    Contacts.find({"id" : req.body.id}).exec(function(err, contact){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -41,9 +40,9 @@ var findById = function(req, cb)
             cb(result);       
             return; 
         }
-        if (customer)
+        if (contact)
         {
-            if (customer.owner !== req.userId)
+            if (contact.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -53,7 +52,7 @@ var findById = function(req, cb)
             }
             result.success = true;
             result.error = undefined;
-            result.data =  customer;
+            result.data =  contact;
             cb(result); 
         }
         else
@@ -65,24 +64,16 @@ var findById = function(req, cb)
         }
     });
 };
-var addCustomer= function(req, cb)
+var addcontact= function(req, cb)
 {
-    var customer = new Customers({
-        spaceId : req.body.spaceId,
-        first_name : req.body.first_name,
-        last_name : req.body.last_name,
-        phoneNumber : req.body.phoneNumber,
-        email : req.body.email,
-        phoneNumberVerified : req.body.phoneNumberVerified,
-        emailVerified : req.body.emailVerified,
-        address : req.body.address,
-        notification : req.body.notification,
-        location : req.body.location,
-        avatar : req.body.avatar,
-        birth_info : req.body.birth_info,
-        favorites : []
-    });
-    customer.save(function(err){
+    var contact = new Contacts();
+    contact = Object.assign(contact, req.body);
+    contact.sys.type = "contact";
+    contact.sys.link = uniqid();
+    contact.sys.issuer = req.userId;
+    contact.sys.issueDate = new Date();
+    contact.sys.spaceId = req.spaceId;
+    contact.save(function(err){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -96,14 +87,14 @@ var addCustomer= function(req, cb)
         //Publish user registered event
         result.success = true;
         result.error = undefined;
-        result.data =  customer;
+        result.data =  contact;
         cb(result); 
     });
 };
 
-var deleteCustomer= function(req, cb)
+var deletecontact= function(req, cb)
 {
-     Customers.findById(req.body.id).exec(function(err, customer){
+     Contacts.findById(req.body.id).exec(function(err, contact){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -113,9 +104,9 @@ var deleteCustomer= function(req, cb)
             cb(result);       
             return; 
         }
-        if (customer)
+        if (contact)
         {
-            if (customer.owner !== req.userId)
+            if (contact.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -123,7 +114,7 @@ var deleteCustomer= function(req, cb)
                 cb(result);       
                 return; 
             }
-            Customers.remove({_id : customer._id}, function(err){
+            Contacts.remove({_id : contact._id}, function(err){
                 if(err)
                 {
                     result.success = false;
@@ -153,9 +144,9 @@ var deleteCustomer= function(req, cb)
     });
 };
 
-var updateCustomer= function(req, cb)
+var updatecontact= function(req, cb)
 {
-     Customers.findById(req.body.id).exec(function(err, customer){
+     Contacts.findById(req.body.id).exec(function(err, contact){
         var result = {success : false, data : null, error : null };
         if (err)
         {
@@ -165,9 +156,9 @@ var updateCustomer= function(req, cb)
             cb(result);       
             return; 
         }
-        if (customer)
+        if (contact)
         {
-            if (customer.owner !== req.userId)
+            if (contact.owner !== req.userId)
             {
                 result.success = false;
                 result.data =  {"message" : "Invalid access"};
@@ -175,19 +166,8 @@ var updateCustomer= function(req, cb)
                 cb(result);       
                 return; 
             }
-            customer.first_name = req.body.first_name,
-            customer.last_name = req.body.last_name,
-            customer.phoneNumber = req.body.phoneNumber,
-            customer.email = req.body.email,
-            customer.phoneNumberVerified = req.body.phoneNumberVerified,
-            customer.emailVerified = req.body.emailVerified,
-            customer.address = req.body.address,
-            customer.notification = req.body.notification,
-            customer.location = req.body.location,
-            customer.avatar = req.body.avatar,
-            customer.birth_info = req.body.birth_info,
-            customer.favorites = req.body.favorites,
-            customer.save(function(err){
+            contact = Object.assign(contact, req.body);
+            contact.save(function(err){
                 if(err)
                 {
                     result.success = false;
@@ -198,7 +178,7 @@ var updateCustomer= function(req, cb)
                 }
                 //Successfull. 
                 //Publish user profile updated event
-                Customers.findById(req.body.id).exec(function(err, customer){
+                Contacts.findById(req.body.id).exec(function(err, contact){
                     if(err)
                     {
                         result.success = false;
@@ -209,7 +189,7 @@ var updateCustomer= function(req, cb)
                     }
                     result.success = true;
                     result.error = undefined;
-                    result.data =  customer;
+                    result.data =  contact;
                     cb(result); 
                 });
             });
@@ -226,8 +206,8 @@ var updateCustomer= function(req, cb)
     });
 };
 
-exports.findBySpaceId = findByUSpaceId;
-exports.addCustomer= addPartner;
-exports.deleteCustomer= deletePartner;
-exports.updateCustomer= updatePartner;
+exports.getall = findByUSpaceId;
+exports.add = addcontact;
+exports.delete = deletecontact;
+exports.update = updatecontact;
 exports.findbyid = findById;
