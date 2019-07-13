@@ -231,7 +231,7 @@ function whenConnected() {
             });
         });
         //Get Contact By User Id API
-        ch.assertQueue("getallcompanies", {durable: false}, (err, q)=>{
+        ch.assertQueue("getallcontacts", {durable: false}, (err, q)=>{
             ch.consume(q.queue, function reply(msg) {
                 var req = JSON.parse(msg.content.toString('utf8'));
                 try{
