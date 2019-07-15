@@ -1,5 +1,5 @@
 const Companies = require('../models/company');
-var uuid = require('uuid/v4')
+var uniqid = require('uniqid')
 var findByUSpaceId = function(req, cb)
 {
     console.log(req);
