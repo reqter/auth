@@ -118,7 +118,7 @@ var findById = function(req, cb)
 //
 var addcompany = function(req, cb)
 {
-    console.log("add company controller : " + req.body);
+    console.log("add company controller : " + JSON.stringify(req.body));
     var company = new Companies();
     company = Object.assign(company, req.body);
     company.sys.type = "company";
