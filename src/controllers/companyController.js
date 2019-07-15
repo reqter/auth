@@ -125,7 +125,7 @@ var addcompany = function(req, cb)
     company.sys.link = uniqid();
     company.sys.issuer = req.userId;
     company.sys.issueDate = new Date();
-    company.sys.spaceId = req.spaceId;
+    company.sys.spaceId = req.spaceId ? req.spaceId : req.spaceid;
     company.save(function(err){
         var result = {success : false, data : null, error : null };
         if (err)
